@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PyAI Tracker — Python → AI Olympiad</title>
+<meta name="description" content="A spaced-repetition learning tracker from Python basics to USA AI Olympiad level — with a heavy linear-algebra core and runnable Google Colab notebooks." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f6f7fb; --bg-elev: #ffffff; --bg-soft: #eef1f8;
+    --text: #1a1d29; --text-soft: #5b6070; --text-faint: #8b90a0;
+    --border: #e4e7f0; --border-soft: #eef0f6;
+    --accent: #5b5bd6; --accent-soft: #ececfb; --accent-text: #4a4ac4;
+    --green: #1aa672; --green-soft: #e3f7ef;
+    --amber: #d98a00; --amber-soft: #fbf0d8; --red: #d9534f;
+    --colab: #e8870b; --colab-soft: #fcefda;
+    --shadow: 0 1px 2px rgba(20,22,40,.04), 0 4px 16px rgba(20,22,40,.05);
+    --shadow-lg: 0 8px 40px rgba(20,22,40,.12);
+    --radius: 14px; --radius-sm: 9px; --maxw: 1080px;
+  }
+  html[data-theme="dark"] {
+    --bg: #0f1117; --bg-elev: #181b24; --bg-soft: #1f2330;
+    --text: #eceef5; --text-soft: #a4a9ba; --text-faint: #6f7488;
+    --border: #272c3a; --border-soft: #20242f;
+    --accent: #8b8bff; --accent-soft: #23233a; --accent-text: #aaaaff;
+    --green: #3fcf8e; --green-soft: #16302a;
+    --amber: #e6a93c; --amber-soft: #322a16; --red: #f0716d;
+    --colab: #f9ab00; --colab-soft: #322813;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.35);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,.5);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.5;
+    -webkit-font-smoothing: antialiased; transition: background .25s ease, color .25s ease;
+  }
+  a { color: var(--accent-text); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  button { font-family: inherit; cursor: pointer; }
+
+  header.app {
+    position: sticky; top: 0; z-index: 40;
+    background: color-mix(in srgb, var(--bg-elev) 88%, transparent);
+    backdrop-filter: saturate(160%) blur(12px); border-bottom: 1px solid var(--border);
+  }
+  .header-inner { max-width: var(--maxw); margin: 0 auto; padding: 14px 22px; display: flex; align-items: center; gap: 16px; }
+  .brand { display: flex; align-items: center; gap: 11px; font-weight: 800; font-size: 19px; letter-spacing: -.02em; }
+  .brand .logo { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, #3776ab, #8e7bff); display: grid; place-items: center; color: #fff; font-size: 16px; box-shadow: 0 2px 10px rgba(91,91,214,.4); }
+  .brand small { font-weight: 500; color: var(--text-faint); font-size: 12px; margin-left: 2px; }
+  .header-spacer { flex: 1; }
+  .icon-btn { border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-soft); width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; font-size: 16px; transition: all .15s ease; }
+  .icon-btn:hover { border-color: var(--accent); color: var(--accent-text); transform: translateY(-1px); }
+  .notif-btn { border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-soft); height: 38px; padding: 0 14px; border-radius: 10px; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 7px; transition: all .15s ease; }
+  .notif-btn:hover { border-color: var(--accent); color: var(--accent-text); }
+  .notif-btn.on { background: var(--green-soft); border-color: var(--green); color: var(--green); }
+
+  nav.tabs { max-width: var(--maxw); margin: 0 auto; padding: 0 22px; display: flex; gap: 4px; }
+  nav.tabs button { border: none; background: none; color: var(--text-soft); font-weight: 600; font-size: 14px; padding: 12px 14px; border-bottom: 2px solid transparent; transition: all .15s ease; }
+  nav.tabs button:hover { color: var(--text); }
+  nav.tabs button.active { color: var(--accent-text); border-bottom-color: var(--accent); }
+  nav.tabs button .badge { background: var(--red); color: #fff; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 1px 7px; margin-left: 6px; vertical-align: middle; }
+
+  main { max-width: var(--maxw); margin: 0 auto; padding: 28px 22px 80px; }
+  .view { animation: fade .25s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: none; } }
+  h1.page { font-size: 26px; font-weight: 800; letter-spacing: -.02em; margin: 0 0 4px; }
+  .page-sub { color: var(--text-soft); margin: 0 0 24px; font-size: 14.5px; }
+  .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); margin: 32px 0 14px; }
+  .card { background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 8px; }
+  .stat { padding: 18px 20px; }
+  .stat .num { font-size: 30px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+  .stat .lbl { color: var(--text-soft); font-size: 13px; font-weight: 500; margin-top: 7px; }
+  .stat .num.accent { color: var(--accent-text); } .stat .num.green { color: var(--green); } .stat .num.amber { color: var(--amber); }
+
+  .subj-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .subj-card { padding: 20px 22px; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
+  .subj-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .subj-card .top { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+  .subj-dot { width: 12px; height: 12px; border-radius: 4px; flex: none; }
+  .subj-card h3 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+  .subj-card .src { color: var(--text-faint); font-size: 12.5px; margin: 2px 0 16px; }
+  .subj-card .meta { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--text-soft); margin-bottom: 7px; }
+  .subj-card .meta b { color: var(--text); font-weight: 700; }
+
+  .bar { height: 8px; background: var(--bg-soft); border-radius: 999px; overflow: hidden; }
+  .bar > span { display: block; height: 100%; border-radius: 999px; transition: width .4s ease; }
+
+  .subject-block { margin-bottom: 14px; }
+  .subject-head { display: flex; align-items: center; gap: 13px; padding: 16px 20px; cursor: pointer; user-select: none; }
+  .subject-head h2 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -.01em; }
+  .subject-head .src { color: var(--text-faint); font-size: 12.5px; font-weight: 500; }
+  .subject-head .pct { margin-left: auto; font-weight: 700; font-size: 14px; color: var(--text-soft); }
+  .subject-head .chev { color: var(--text-faint); transition: transform .2s ease; font-size: 13px; }
+  .subject-block.collapsed .chev { transform: rotate(-90deg); }
+  .subject-block.collapsed .units { display: none; }
+  .subject-head .minibar { width: 90px; height: 6px; }
+
+  .units { padding: 4px 16px 16px; display: grid; gap: 12px; }
+  .unit { border: 1px solid var(--border-soft); border-radius: var(--radius-sm); background: var(--bg); overflow: hidden; }
+  html[data-theme="dark"] .unit { background: var(--bg-soft); }
+  .unit-head { display: flex; align-items: center; gap: 12px; padding: 13px 16px; cursor: pointer; user-select: none; }
+  .unit-head .u-title { font-weight: 650; font-size: 15px; }
+  .unit-head .u-chap { color: var(--text-faint); font-size: 12px; font-weight: 500; margin-top: 1px; }
+  .unit-head .u-prog { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .unit-head .u-count { font-size: 12px; color: var(--text-soft); font-weight: 600; white-space: nowrap; }
+  .unit-head .minibar { width: 70px; height: 6px; }
+  .unit-head .chev { color: var(--text-faint); font-size: 12px; transition: transform .2s ease; }
+  .unit.open .chev { transform: rotate(90deg); }
+  .unit-body { display: none; padding: 4px 16px 18px; border-top: 1px solid var(--border-soft); }
+  .unit.open .unit-body { display: block; }
+
+  .submod { padding: 11px 4px 12px; border-bottom: 1px solid var(--border-soft); }
+  .submod:last-child { border-bottom: none; }
+  .submod-row { display: flex; align-items: flex-start; gap: 11px; }
+  .submod label { display: flex; align-items: flex-start; gap: 11px; cursor: pointer; font-size: 14px; flex: 1; }
+  .submod input { display: none; }
+  .checkbox { width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--border); flex: none; margin-top: 1px; display: grid; place-items: center; transition: all .15s ease; color: #fff; font-size: 12px; }
+  .submod input:checked + .checkbox { background: var(--green); border-color: var(--green); }
+  .submod input:not(:checked) + .checkbox { color: transparent; }
+  .submod input:checked ~ .sm-text { color: var(--text-faint); text-decoration: line-through; }
+  .sm-text { padding-top: 1px; }
+  .sec-tag { font-size: 11px; font-weight: 600; color: var(--text-faint); background: var(--bg-soft); border: 1px solid var(--border-soft); border-radius: 6px; padding: 2px 8px; white-space: nowrap; margin-top: 1px; flex: none; }
+  .sm-links { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0 31px; }
+  .sm-links a { font-size: 11.5px; color: var(--accent-text); background: var(--accent-soft); border-radius: 6px; padding: 3px 9px; display: inline-flex; align-items: center; gap: 5px; line-height: 1.3; }
+  .sm-links a:hover { text-decoration: none; filter: brightness(.96); }
+  .sm-links a .ext { color: var(--text-faint); font-size: 10px; }
+  .sm-links a.sm-pdf { background: var(--green-soft); color: var(--green); font-weight: 600; }
+  .sm-links a.sm-pdf .ext { color: var(--green); opacity: .7; }
+  .sm-links a.sm-colab { background: var(--colab-soft); color: var(--colab); font-weight: 700; }
+  .sm-links a.sm-colab .ext { color: var(--colab); opacity: .7; }
+
+  .unit-meta { margin-top: 16px; display: grid; gap: 16px; }
+  .meta-box { background: var(--bg-elev); border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 14px 16px; }
+  .meta-box h4 { margin: 0 0 10px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-faint); font-weight: 700; }
+  .book-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .book-chip { font-size: 12.5px; background: var(--bg-soft); border: 1px solid var(--border-soft); border-radius: 7px; padding: 4px 10px; }
+  .book-chip b { font-weight: 650; } .book-chip span { color: var(--text-soft); }
+  .link-list { display: grid; gap: 7px; }
+  .link-list a { font-size: 13.5px; display: flex; align-items: center; gap: 8px; }
+  .link-list a .ext { color: var(--text-faint); font-size: 11px; }
+  .vocab-list { display: flex; flex-wrap: wrap; gap: 7px; }
+  .vocab-pill { font-size: 12.5px; background: var(--accent-soft); color: var(--accent-text); border-radius: 999px; padding: 4px 12px; font-weight: 500; }
+
+  .review-col { display: grid; gap: 12px; }
+  .review-item { display: flex; align-items: center; gap: 14px; padding: 15px 18px; }
+  .review-item .ri-icon { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; flex: none; font-size: 17px; }
+  .review-item .ri-main { flex: 1; min-width: 0; }
+  .review-item .ri-title { font-weight: 600; font-size: 14.5px; }
+  .review-item .ri-sub { color: var(--text-faint); font-size: 12.5px; margin-top: 2px; }
+  .review-item .ri-due { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+  .due-now { background: var(--red); color: #fff; } .due-soon { background: var(--amber-soft); color: var(--amber); }
+  .btn { border: 1px solid var(--border); background: var(--bg-elev); color: var(--text); font-weight: 600; font-size: 13px; padding: 8px 15px; border-radius: 9px; transition: all .15s ease; white-space: nowrap; }
+  .btn:hover { border-color: var(--accent); color: var(--accent-text); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { filter: brightness(1.08); color: #fff; }
+  .vocab-review-card { padding: 18px 20px; }
+  .vocab-review-card .vr-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .vocab-review-card .terms { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .vocab-review-card .terms .vocab-pill { font-size: 13.5px; padding: 6px 14px; }
+
+  .empty { text-align: center; padding: 54px 20px; color: var(--text-faint); }
+  .empty .big { font-size: 40px; margin-bottom: 10px; } .empty p { margin: 4px 0; }
+
+  .prose { max-width: 720px; }
+  .prose h2 { font-size: 19px; font-weight: 700; margin: 28px 0 10px; letter-spacing: -.01em; }
+  .prose p, .prose li { color: var(--text-soft); font-size: 15px; }
+  .prose ol, .prose ul { padding-left: 22px; } .prose li { margin: 6px 0; }
+  .prose code { font-family: 'JetBrains Mono', monospace; font-size: 13px; background: var(--bg-soft); padding: 1px 6px; border-radius: 5px; }
+  .interval-pills { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+  .interval-pills .ip { background: var(--accent-soft); color: var(--accent-text); border-radius: 9px; padding: 8px 14px; font-weight: 700; font-size: 14px; text-align: center; }
+  .interval-pills .ip small { display: block; font-weight: 500; color: var(--text-soft); font-size: 11px; }
+
+  #toaster { position: fixed; bottom: 22px; right: 22px; z-index: 100; display: grid; gap: 10px; max-width: 340px; }
+  .toast { background: var(--bg-elev); border: 1px solid var(--border); border-left: 3px solid var(--accent); box-shadow: var(--shadow-lg); border-radius: 11px; padding: 13px 16px; animation: slidein .3s ease; }
+  .toast.success { border-left-color: var(--green); }
+  .toast .t-title { font-weight: 700; font-size: 13.5px; } .toast .t-body { font-size: 13px; color: var(--text-soft); margin-top: 3px; }
+  @keyframes slidein { from { opacity: 0; transform: translateX(40px);} to { opacity: 1; transform: none; } }
+  .danger-link { background: none; border: none; color: var(--text-faint); font-size: 12.5px; text-decoration: underline; padding: 0; }
+  .danger-link:hover { color: var(--red); }
+
+  @media (max-width: 760px) {
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .subj-grid { grid-template-columns: 1fr; }
+    .brand small { display: none; }
+    main { padding: 22px 16px 80px; }
+    .header-inner, nav.tabs { padding-left: 16px; padding-right: 16px; }
+    .sm-links { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+<header class="app">
+  <div class="header-inner">
+    <div class="brand"><span class="logo">🐍</span><span>PyAI Tracker <small>Python basics → USA AI Olympiad</small></span></div>
+    <span class="header-spacer"></span>
+    <button class="notif-btn" id="notifBtn" title="Enable browser reminders"><span id="notifIcon">🔔</span><span id="notifLabel">Reminders</span></button>
+    <button class="icon-btn" id="themeBtn" title="Toggle theme">🌙</button>
+  </div>
+  <nav class="tabs" id="tabs">
+    <button data-tab="dashboard" class="active">Dashboard</button>
+    <button data-tab="subjects">Tracks</button>
+    <button data-tab="review">Review Queue <span class="badge" id="reviewBadge" style="display:none">0</span></button>
+    <button data-tab="about">How it works</button>
+  </nav>
+</header>
+<main id="main"></main>
+<div id="toaster"></div>
+
+<!-- ============================ CURRICULUM DATA ============================
+  Tracks are pushed onto CURRICULUM below. Each submodule is an object:
+  { t: title, sec: section label, links: [[label,url],...], pdf?: [[label,url]], colab?: "notebook.ipynb" } -->
+<script>
+"use strict";
+var CURRICULUM = [];
+CURRICULUM.push({
+  id: "py", name: "Python Foundations", icon: "🐍", color: "#3776ab",
+  source: "Python docs · Automate the Boring Stuff · Fluent Python",
+  units: [
+    { id: "py-intro", title: "Getting Started & Python Syntax",
+      chap: [["Python Tutorial","§1–3"],["ATBS","Ch. 1"],["Fluent Python","Ch. 1"]],
+      vocab: ["REPL","Variable","Expression","Statement","Indentation","Dynamic typing","Comment"],
+      links: [["The Python Tutorial","https://docs.python.org/3/tutorial/index.html"]],
+      submods: [
+        { t: "Installing Python, the REPL & running scripts", sec: "Py Tutorial §2", links: [["Python — Using the interpreter","https://docs.python.org/3/tutorial/interpreter.html"],["Real Python — Install Python","https://realpython.com/installing-python/"]], colab: "nb_python_basics.ipynb" },
+        { t: "Numbers, strings & variables", sec: "Py Tutorial §3", links: [["Python — An informal introduction","https://docs.python.org/3/tutorial/introduction.html"],["ATBS — Python Basics","https://automatetheboringstuff.com/2e/chapter1/"]], colab: "nb_python_basics.ipynb" },
+        { t: "Booleans, comparisons & operators", sec: "ATBS Ch. 1", links: [["ATBS — The basics","https://automatetheboringstuff.com/2e/chapter1/"]] },
+        { t: "f-strings & string methods", sec: "Py Tutorial §7.1", links: [["Python — Input and Output","https://docs.python.org/3/tutorial/inputoutput.html"],["Real Python — f-strings","https://realpython.com/python-f-strings/"]] }
+      ] },
+    { id: "py-control", title: "Control Flow",
+      chap: [["Python Tutorial","§4"],["ATBS","Ch. 2"]],
+      vocab: ["if/elif/else","while","for","range","break","continue","Truthiness"],
+      links: [["Python — Control flow tools","https://docs.python.org/3/tutorial/controlflow.html"]],
+      submods: [
+        { t: "if / elif / else", sec: "Py Tutorial §4.1", links: [["Python — if statements","https://docs.python.org/3/tutorial/controlflow.html"],["ATBS — Flow control","https://automatetheboringstuff.com/2e/chapter2/"]] },
+        { t: "while & for loops; range()", sec: "Py Tutorial §4.2–4.3", links: [["Python — for statements","https://docs.python.org/3/tutorial/controlflow.html"]], colab: "nb_python_basics.ipynb" },
+        { t: "break, continue & loop else", sec: "Py Tutorial §4.4", links: [["Python — break & continue","https://docs.python.org/3/tutorial/controlflow.html"]] },
+        { t: "match statements (structural pattern matching)", sec: "Py Tutorial §4.6", links: [["Python — match statements","https://docs.python.org/3/tutorial/controlflow.html"]] }
+      ] },
+    { id: "py-functions", title: "Functions & Modules",
+      chap: [["Python Tutorial","§4.7–§6"],["Fluent Python","Ch. 7"]],
+      vocab: ["Parameter","Argument","*args","**kwargs","Default","Scope","Lambda","Module","import"],
+      links: [["Python — Defining functions","https://docs.python.org/3/tutorial/controlflow.html"]],
+      submods: [
+        { t: "Defining functions & return values", sec: "Py Tutorial §4.7", links: [["Python — Defining functions","https://docs.python.org/3/tutorial/controlflow.html"]], colab: "nb_python_basics.ipynb" },
+        { t: "Default, keyword, *args & **kwargs", sec: "Py Tutorial §4.8", links: [["Python — Function arguments","https://docs.python.org/3/tutorial/controlflow.html"],["Real Python — args & kwargs","https://realpython.com/python-kwargs-and-args/"]] },
+        { t: "Lambdas & higher-order functions", sec: "Fluent Python Ch. 7", links: [["Python — Lambda expressions","https://docs.python.org/3/tutorial/controlflow.html"]] },
+        { t: "Modules, packages & imports", sec: "Py Tutorial §6", links: [["Python — Modules","https://docs.python.org/3/tutorial/modules.html"]] },
+        { t: "Virtual environments & pip", sec: "Py Tutorial §12", links: [["Python — Virtual environments","https://docs.python.org/3/tutorial/venv.html"]] }
+      ] },
+    { id: "py-ds", title: "Built-in Data Structures",
+      chap: [["Python Tutorial","§5"],["Fluent Python","Ch. 2–3"]],
+      vocab: ["List","Tuple","Dict","Set","Slicing","Mutability","Comprehension"],
+      links: [["Python — Data structures","https://docs.python.org/3/tutorial/datastructures.html"]],
+      submods: [
+        { t: "Lists & slicing", sec: "Py Tutorial §5.1", links: [["Python — Lists","https://docs.python.org/3/tutorial/datastructures.html"]], colab: "nb_python_basics.ipynb" },
+        { t: "Tuples & sequences", sec: "Py Tutorial §5.3", links: [["Python — Tuples","https://docs.python.org/3/tutorial/datastructures.html"]] },
+        { t: "Dictionaries", sec: "Py Tutorial §5.5", links: [["Python — Dictionaries","https://docs.python.org/3/tutorial/datastructures.html"],["Real Python — Dictionaries","https://realpython.com/python-dicts/"]] },
+        { t: "Sets", sec: "Py Tutorial §5.4", links: [["Python — Sets","https://docs.python.org/3/tutorial/datastructures.html"]] },
+        { t: "List / dict / set comprehensions", sec: "Py Tutorial §5.1.3", links: [["Python — List comprehensions","https://docs.python.org/3/tutorial/datastructures.html"]], colab: "nb_python_basics.ipynb" }
+      ] },
+    { id: "py-oop", title: "OOP & Idiomatic Python",
+      chap: [["Python Tutorial","§9"],["Fluent Python","Ch. 1, 9"]],
+      vocab: ["Class","Object","Method","__init__","Inheritance","Dunder","Decorator","Generator"],
+      links: [["Python — Classes","https://docs.python.org/3/tutorial/classes.html"]],
+      submods: [
+        { t: "Classes, objects & __init__", sec: "Py Tutorial §9.3", links: [["Python — Classes","https://docs.python.org/3/tutorial/classes.html"],["Real Python — OOP","https://realpython.com/python3-object-oriented-programming/"]] },
+        { t: "Inheritance & polymorphism", sec: "Py Tutorial §9.5", links: [["Python — Inheritance","https://docs.python.org/3/tutorial/classes.html"]] },
+        { t: "Dunder methods & the data model", sec: "Fluent Python Ch. 1", links: [["Python data model","https://docs.python.org/3/reference/datamodel.html"]] },
+        { t: "Decorators & properties", sec: "Fluent Python Ch. 9", links: [["Real Python — Decorators","https://realpython.com/primer-on-python-decorators/"]] },
+        { t: "Iterators & generators", sec: "Py Tutorial §9.9", links: [["Python — Generators","https://docs.python.org/3/tutorial/classes.html"]] }
+      ] },
+    { id: "py-stdlib", title: "Files, Errors & the Standard Library",
+      chap: [["Python Tutorial","§7–8, 10"],["ATBS","Ch. 9–10, 16"]],
+      vocab: ["Exception","try/except","with","Context manager","File I/O","JSON"],
+      links: [["Python — Standard library tour","https://docs.python.org/3/tutorial/stdlib.html"]],
+      submods: [
+        { t: "Reading & writing files", sec: "Py Tutorial §7.2", links: [["Python — Files","https://docs.python.org/3/tutorial/inputoutput.html"],["ATBS — Reading/writing files","https://automatetheboringstuff.com/2e/chapter9/"]], colab: "nb_python_basics.ipynb" },
+        { t: "Exceptions: try / except / finally", sec: "Py Tutorial §8", links: [["Python — Errors & exceptions","https://docs.python.org/3/tutorial/errors.html"]] },
+        { t: "Context managers (with)", sec: "Py Tutorial §8.7", links: [["Real Python — Context managers","https://realpython.com/python-with-statement/"]] },
+        { t: "Standard library tour (os, math, random, collections)", sec: "Py Tutorial §10", links: [["Python — Standard library brief tour","https://docs.python.org/3/tutorial/stdlib.html"]] },
+        { t: "JSON & data formats", sec: "ATBS Ch. 16", links: [["Python — json module","https://docs.python.org/3/library/json.html"]] }
+      ] }
+  ]
+});
+CURRICULUM.push({
+  id: "dsa", name: "Data Structures & Algorithms", icon: "🧩", color: "#e8743b",
+  source: "CLRS · Competitive Programmer's Handbook · USACO Guide",
+  units: [
+    { id: "dsa-complexity", title: "Complexity & Big-O",
+      chap: [["CLRS","Ch. 2–3"],["CP-Handbook","Ch. 2"],["MIT 6.006","L1–2"]],
+      vocab: ["Big-O","Time complexity","Space complexity","Amortized","Asymptotic"],
+      links: [["MIT 6.006 Intro to Algorithms","https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/"]],
+      submods: [
+        { t: "Asymptotic notation (O, Θ, Ω)", sec: "CLRS Ch. 3", links: [["USACO Guide — Time complexity","https://usaco.guide/bronze/time-comp"]], pdf: [["📄 CP-Handbook (PDF)","https://cses.fi/book/book.pdf"]] },
+        { t: "Analyzing loops & recursion", sec: "CP-Handbook Ch. 2", links: [["MIT 6.006 — Lecture notes","https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/pages/lecture-notes/"]], pdf: [["📄 CP-Handbook (PDF)","https://cses.fi/book/book.pdf"]] },
+        { t: "Common complexity classes & estimating", sec: "CP-Handbook Ch. 2", links: [["USACO Guide — Complexity","https://usaco.guide/bronze/time-comp"]], pdf: [["📄 CP-Handbook (PDF)","https://cses.fi/book/book.pdf"]] },
+        { t: "Amortized analysis", sec: "CLRS Ch. 16", links: [["MIT 6.006","https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/"]] }
+      ] },
+    { id: "dsa-ds", title: "Core Data Structures",
+      chap: [["CLRS","Ch. 10–13"],["CP-Handbook","Ch. 4"],["USACO Guide","Silver/Gold"]],
+      vocab: ["Array","Linked list","Stack","Queue","Hash table","Heap","BST"],
+      links: [["USACO Guide — Data structures","https://usaco.guide/silver/"]],
+      submods: [
+        { t: "Arrays & dynamic arrays", sec: "CP-Handbook Ch. 4", links: [["USACO Guide — Intro to data structures","https://usaco.guide/bronze/intro-ds"]], pdf: [["📄 CP-Handbook (PDF)","https://cses.fi/book/book.pdf"]] },
+        { t: "Stacks & queues", sec: "USACO Gold", links: [["USACO Guide — Stacks & queues","https://usaco.guide/gold/stacks"]] },
+        { t: "Hash tables & sets", sec: "CLRS Ch. 11", links: [["USACO Guide — Sets & maps","https://usaco.guide/silver/intro-sorting-stl"]] },
+        { t: "Heaps / priority queues", sec: "USACO Silver", links: [["USACO Guide — Priority queues","https://usaco.guide/silver/priority-queues"]] },
+        { t: "Binary search trees & balanced trees", sec: "CLRS Ch. 12", links: [["MIT 6.006 — BSTs","https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/"]] }
+      ] },
+    { id: "dsa-sort", title: "Sorting & Searching",
+      chap: [["CLRS","Ch. 6–8"],["CP-Handbook","Ch. 3"],["USACO Guide","Silver"]],
+      vocab: ["Merge sort","Quicksort","Binary search","Two pointers","Sliding window","Prefix sums"],
+      links: [["cp-algorithms — Sorting & searching","https://cp-algorithms.com/"]],
+      submods: [
+        { t: "Sorting algorithms (merge, quick, heap)", sec: "CLRS Ch. 6–7", links: [["USACO Guide — Sorting","https://usaco.guide/silver/sorting-custom"]], pdf: [["📄 CP-Handbook (PDF)","https://cses.fi/book/book.pdf"]] },
+        { t: "Binary search", sec: "cp-algorithms", links: [["cp-algorithms — Binary search","https://cp-algorithms.com/num_methods/binary_search.html"],["USACO Guide — Binary search","https://usaco.guide/silver/binary-search"]] },
+        { t: "Two pointers & sliding window", sec: "USACO Silver", links: [["USACO Guide — Two pointers","https://usaco.guide/silver/two-pointers"]] },
+        { t: "Prefix sums & difference arrays", sec: "USACO Silver", links: [["USACO Guide — Prefix sums","https://usaco.guide/silver/prefix-sums"]] }
+      ] },
+    { id: "dsa-dp", title: "Recursion & Dynamic Programming",
+      chap: [["CLRS","Ch. 14"],["CP-Handbook","Ch. 7"],["USACO Guide","Gold"]],
+      vocab: ["Recursion","Backtracking","Memoization","Tabulation","Optimal substructure","Knapsack"],
+      links: [["USACO Guide — Dynamic programming","https://usaco.guide/gold/intro-dp"]],
+      submods: [
+        { t: "Recursion & backtracking", sec: "CP-Handbook Ch. 5", links: [["USACO Guide — Recursion","https://usaco.guide/bronze/intro-complete"]], pdf: [["📄 CP-Handbook (PDF)","https://cses.fi/book/book.pdf"]] },
+        { t: "Intro to DP (memoization & tabulation)", sec: "cp-algorithms", links: [["cp-algorithms — Intro to DP","https://cp-algorithms.com/dynamic_programming/intro-to-dp.html"],["USACO Guide — Intro to DP","https://usaco.guide/gold/intro-dp"]] },
+        { t: "Classic DP (knapsack, LIS, edit distance)", sec: "USACO Gold", links: [["USACO Guide — Knapsack","https://usaco.guide/gold/knapsack"]] },
+        { t: "DP on grids & trees", sec: "USACO Gold", links: [["USACO Guide — Paths on grids","https://usaco.guide/gold/paths-grids"],["USACO Guide — Tree DP","https://usaco.guide/gold/dp-trees"]] }
+      ] },
+    { id: "dsa-graphs", title: "Graph Algorithms",
+      chap: [["CLRS","Ch. 20–23"],["cp-algorithms","Graph"],["USACO Guide","Silver/Gold"]],
+      vocab: ["BFS","DFS","Dijkstra","Bellman-Ford","MST","Topological sort"],
+      links: [["cp-algorithms — Graph algorithms","https://cp-algorithms.com/graph/breadth-first-search.html"]],
+      submods: [
+        { t: "Graph representation & BFS/DFS", sec: "cp-algorithms", links: [["cp-algorithms — BFS","https://cp-algorithms.com/graph/breadth-first-search.html"],["USACO Guide — Graph traversal","https://usaco.guide/silver/graph-traversal"]] },
+        { t: "Shortest paths (Dijkstra, Bellman-Ford)", sec: "cp-algorithms", links: [["cp-algorithms — Dijkstra","https://cp-algorithms.com/graph/dijkstra.html"],["USACO Guide — Shortest paths","https://usaco.guide/gold/shortest-paths"]] },
+        { t: "Minimum spanning tree (Kruskal, Prim)", sec: "cp-algorithms", links: [["cp-algorithms — MST (Kruskal)","https://cp-algorithms.com/graph/mst_kruskal.html"]] },
+        { t: "Topological sort & DAGs", sec: "cp-algorithms", links: [["cp-algorithms — Topological sort","https://cp-algorithms.com/graph/topological-sort.html"]] }
+      ] }
+  ]
+});
+CURRICULUM.push({
+  id: "sci", name: "Scientific Python", icon: "📊", color: "#1aa672",
+  source: "Python Data Science Handbook (free) · NumPy / pandas / Matplotlib docs",
+  units: [
+    { id: "sci-numpy", title: "NumPy",
+      chap: [["Py Data Science Handbook","Ch. 2"],["NumPy docs","User guide"]],
+      vocab: ["ndarray","dtype","Broadcasting","Vectorization","Axis","ufunc"],
+      links: [["NumPy — Absolute beginners guide","https://numpy.org/doc/stable/user/absolute_beginners.html"]],
+      submods: [
+        { t: "The ndarray & dtypes", sec: "PDSH §2.1", links: [["NumPy quickstart","https://numpy.org/doc/stable/user/quickstart.html"]], pdf: [["📄 PDSH — NumPy basics","https://jakevdp.github.io/PythonDataScienceHandbook/02.02-the-basics-of-numpy-arrays.html"]], colab: "nb_numpy.ipynb" },
+        { t: "Indexing, slicing & fancy indexing", sec: "PDSH §2.2", links: [["NumPy — Indexing","https://numpy.org/doc/stable/user/basics.indexing.html"]], colab: "nb_numpy.ipynb" },
+        { t: "Vectorized computation (ufuncs)", sec: "PDSH §2.3", links: [["NumPy — Universal functions","https://numpy.org/doc/stable/reference/ufuncs.html"]] },
+        { t: "Aggregations & axis operations", sec: "PDSH §2.4", pdf: [["📄 PDSH — Aggregations","https://jakevdp.github.io/PythonDataScienceHandbook/02.04-computation-on-arrays-aggregates.html"]] },
+        { t: "Broadcasting", sec: "PDSH §2.5", links: [["NumPy — Broadcasting","https://numpy.org/doc/stable/user/basics.broadcasting.html"]], pdf: [["📄 PDSH — Broadcasting","https://jakevdp.github.io/PythonDataScienceHandbook/02.05-computation-on-arrays-broadcasting.html"]], colab: "nb_numpy.ipynb" }
+      ] },
+    { id: "sci-pandas", title: "pandas",
+      chap: [["Py Data Science Handbook","Ch. 3"],["pandas docs"]],
+      vocab: ["Series","DataFrame","Index","GroupBy","Merge","Missing data"],
+      links: [["pandas — 10 minutes to pandas","https://pandas.pydata.org/docs/user_guide/10min.html"]],
+      submods: [
+        { t: "Series & DataFrame objects", sec: "PDSH §3.1", pdf: [["📄 PDSH — Pandas objects","https://jakevdp.github.io/PythonDataScienceHandbook/03.01-introducing-pandas-objects.html"]], colab: "nb_pandas.ipynb" },
+        { t: "Indexing & selection", sec: "PDSH §3.2", links: [["pandas — Indexing","https://pandas.pydata.org/docs/user_guide/indexing.html"]] },
+        { t: "Handling missing data", sec: "PDSH §3.4", links: [["pandas — Missing data","https://pandas.pydata.org/docs/user_guide/missing_data.html"]] },
+        { t: "GroupBy & aggregation", sec: "PDSH §3.8", pdf: [["📄 PDSH — GroupBy","https://jakevdp.github.io/PythonDataScienceHandbook/03.08-aggregation-and-grouping.html"]], colab: "nb_pandas.ipynb" },
+        { t: "Merging & joining", sec: "PDSH §3.7", links: [["pandas — Merge & join","https://pandas.pydata.org/docs/user_guide/merging.html"]] }
+      ] },
+    { id: "sci-viz", title: "Matplotlib & Visualization",
+      chap: [["Py Data Science Handbook","Ch. 4"],["Matplotlib docs"]],
+      vocab: ["Figure","Axes","Plot","Scatter","Histogram","Subplot"],
+      links: [["Matplotlib — Quick start guide","https://matplotlib.org/stable/users/explain/quick_start.html"]],
+      submods: [
+        { t: "Line & scatter plots", sec: "PDSH §4.1", pdf: [["📄 PDSH — Simple line plots","https://jakevdp.github.io/PythonDataScienceHandbook/04.01-simple-line-plots.html"]] },
+        { t: "Histograms & distributions", sec: "PDSH §4.5", links: [["Matplotlib — hist","https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html"]] },
+        { t: "Subplots & multi-panel figures", sec: "PDSH §4.8", links: [["Matplotlib — Subplots","https://matplotlib.org/stable/gallery/subplots_axes_and_figures/subplots_demo.html"]] },
+        { t: "Customizing & styling plots", sec: "Matplotlib tutorials", links: [["Matplotlib — Tutorials","https://matplotlib.org/stable/tutorials/index.html"]] }
+      ] },
+    { id: "sci-eda", title: "Data Wrangling & EDA",
+      chap: [["Py Data Science Handbook","Ch. 3"],["pandas docs"]],
+      vocab: ["EDA","Cleaning","Pivot","Correlation","Feature","Vectorize"],
+      links: [["PDSH — Full free text","https://jakevdp.github.io/PythonDataScienceHandbook/"]],
+      submods: [
+        { t: "Loading & cleaning tabular data", sec: "pandas — 10 min", links: [["pandas — IO tools","https://pandas.pydata.org/docs/user_guide/io.html"]] },
+        { t: "Pivot tables & reshaping", sec: "PDSH §3.9", pdf: [["📄 PDSH — Pivot tables","https://jakevdp.github.io/PythonDataScienceHandbook/03.09-pivot-tables.html"]] },
+        { t: "Exploratory data analysis workflow", sec: "PDSH Ch. 3", colab: "nb_pandas.ipynb", links: [["pandas — Cookbook","https://pandas.pydata.org/docs/user_guide/cookbook.html"]] },
+        { t: "Combining NumPy + pandas + matplotlib", sec: "PDSH", colab: "nb_numpy.ipynb", links: [["PDSH — Full free text","https://jakevdp.github.io/PythonDataScienceHandbook/"]] }
+      ] }
+  ]
+});
+CURRICULUM.push({
+  id: "math", name: "Mathematics for ML (Linear Algebra core)", icon: "📐", color: "#5b5bd6",
+  source: "Mathematics for ML (Deisenroth) · Strang / MIT 18.06 · 3Blue1Brown",
+  units: [
+    { id: "math-la1", title: "Linear Algebra I — Vectors & Matrices",
+      chap: [["MML","§2.1–2.3, Ch. 3"],["MIT 18.06","Lec 1–3"],["3Blue1Brown","Essence of LA 1–4"]],
+      vocab: ["Vector","Dot product","Norm","Matrix","Matrix multiplication","Transpose","Identity","Inverse"],
+      links: [["MIT 18.06 Linear Algebra (Strang)","https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/"],["3Blue1Brown — Essence of Linear Algebra","https://www.3blue1brown.com/topics/linear-algebra"]],
+      submods: [
+        { t: "Vectors & vector operations", sec: "MML §2.1", links: [["3Blue1Brown — Vectors","https://www.3blue1brown.com/lessons/vectors"],["Khan — Vectors","https://www.khanacademy.org/math/linear-algebra/vectors-and-spaces"]], pdf: [["📄 MML (PDF)","https://mml-book.github.io/book/mml-book.pdf"]], colab: "nb_linear_algebra.ipynb" },
+        { t: "Dot product, norms & angles", sec: "MML §3.1–3.2", links: [["MIT 18.06 — Inner products","https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/"]], colab: "nb_linear_algebra.ipynb" },
+        { t: "Matrices & matrix-vector products", sec: "MML §2.2", links: [["3Blue1Brown — Linear transformations","https://www.3blue1brown.com/lessons/linear-transformations"]], pdf: [["📄 MML (PDF)","https://mml-book.github.io/book/mml-book.pdf"]] },
+        { t: "Matrix multiplication", sec: "MML §2.2.1", links: [["3Blue1Brown — Matrix multiplication","https://www.3blue1brown.com/lessons/matrix-multiplication"]], colab: "nb_linear_algebra.ipynb" },
+        { t: "Transpose, identity & inverse", sec: "MML §2.2.2", links: [["3Blue1Brown — Inverse matrices","https://www.3blue1brown.com/lessons/inverse-matrices"]] }
+      ] },
+    { id: "math-la2", title: "Linear Algebra II — Linear Systems & Vector Spaces",
+      chap: [["MML","§2.3–2.7"],["MIT 18.06","Lec 4–10"],["3Blue1Brown","Essence of LA 5–9"]],
+      vocab: ["Linear system","Gaussian elimination","Vector space","Subspace","Span","Linear independence","Basis","Rank"],
+      links: [["MIT 18.06 — Linear Algebra","https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/"]],
+      submods: [
+        { t: "Systems of linear equations & Gaussian elimination", sec: "MML §2.3", links: [["MIT 18.06 — Elimination","https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/"]], pdf: [["📄 MML (PDF)","https://mml-book.github.io/book/mml-book.pdf"]] },
+        { t: "Vector spaces & subspaces", sec: "MML §2.4", links: [["Khan — Subspaces","https://www.khanacademy.org/math/linear-algebra/vectors-and-spaces"]] },
+        { t: "Linear independence", sec: "MML §2.5", links: [["3Blue1Brown — Linear combinations & span","https://www.3blue1brown.com/lessons/span"]] },
+        { t: "Basis, dimension & rank", sec: "MML §2.6–2.7", links: [["3Blue1Brown — Basis vectors","https://www.3blue1brown.com/lessons/span"]], pdf: [["📄 MML (PDF)","https://mml-book.github.io/book/mml-book.pdf"]] },
+        { t: "Linear maps & change of basis", sec: "MML §2.7", links: [["3Blue1Brown — Change of basis","https://www.3blue1brown.com/lessons/change-of-basis"]] }
+      ] },
+    { id: "math-la3", title: "Linear Algebra III — Eigenvalues, SVD & PCA",
+      chap: [["MML","Ch. 4, §10.x"],["MIT 18.06","Lec 21–29"],["3Blue1Brown","Eigen"]],
+      vocab: ["Determinant","Eigenvalue","Eigenvector","Diagonalization","Orthogonality","Projection","SVD","PCA"],
+      links: [["MIT 18.06 — Eigenvalues & SVD","https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/"]],
+      submods: [
+        { t: "Determinants & trace", sec: "MML §4.1", links: [["3Blue1Brown — The determinant","https://www.3blue1brown.com/lessons/determinant"]], pdf: [["📄 MML (PDF)","https://mml-book.github.io/book/mml-book.pdf"]], colab: "nb_matrix_ops_eigen.ipynb" },
+        { t: "Eigenvalues & eigenvectors", sec: "MML §4.2", links: [["3Blue1Brown — Eigenvectors & eigenvalues","https://www.3blue1brown.com/lessons/eigenvalues"]], colab: "nb_matrix_ops_eigen.ipynb" },
+        { t: "Diagonalization & matrix powers", sec: "MML §4.4", links: [["MIT 18.06 — Diagonalization","https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/"]] },
+        { t: "Orthogonality, projections & Gram-Schmidt", sec: "MML §3.7–3.8", links: [["MIT 18.06 — Orthogonality","https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/"]] },
+        { t: "Singular Value Decomposition (SVD)", sec: "MML §4.5", links: [["MIT 18.06 — SVD","https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/"]], pdf: [["📄 MML (PDF)","https://mml-book.github.io/book/mml-book.pdf"]], colab: "nb_matrix_ops_eigen.ipynb" },
+        { t: "PCA from eigendecomposition / SVD", sec: "MML Ch. 10", links: [["MML — Dimensionality reduction","https://mml-book.github.io/"]], colab: "nb_pca.ipynb" }
+      ] },
+    { id: "math-calc", title: "Calculus & Gradients for ML",
+      chap: [["MML","Ch. 5"],["3Blue1Brown","Essence of Calculus"]],
+      vocab: ["Derivative","Partial derivative","Gradient","Chain rule","Jacobian","Hessian","Taylor series"],
+      links: [["3Blue1Brown — Essence of Calculus","https://www.3blue1brown.com/topics/calculus"]],
+      submods: [
+        { t: "Derivatives & differentiation rules", sec: "MML §5.1", links: [["3Blue1Brown — Derivatives","https://www.3blue1brown.com/lessons/derivatives"]], pdf: [["📄 MML (PDF)","https://mml-book.github.io/book/mml-book.pdf"]] },
+        { t: "Partial derivatives & gradients", sec: "MML §5.2", links: [["Khan — Gradient","https://www.khanacademy.org/math/multivariable-calculus"]] },
+        { t: "Chain rule & backpropagation math", sec: "MML §5.2.2", links: [["CS231n — Backprop","https://cs231n.github.io/optimization-2/"]] },
+        { t: "Jacobians & Hessians", sec: "MML §5.3", pdf: [["📄 MML (PDF)","https://mml-book.github.io/book/mml-book.pdf"]] },
+        { t: "Gradients of matrices & useful identities", sec: "MML §5.5", links: [["The Matrix Cookbook (PDF)","https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf"]] }
+      ] },
+    { id: "math-prob", title: "Probability & Statistics",
+      chap: [["MML","Ch. 6"],["Harvard Stat 110"],["3Blue1Brown","Probability"]],
+      vocab: ["Random variable","Distribution","Expectation","Variance","Bayes' theorem","Gaussian","MLE"],
+      links: [["Harvard Stat 110 (free)","https://projects.iq.harvard.edu/stat110/home"]],
+      submods: [
+        { t: "Probability basics & rules", sec: "MML §6.1", links: [["Khan — Probability","https://www.khanacademy.org/math/statistics-probability/probability-library"]], pdf: [["📄 MML (PDF)","https://mml-book.github.io/book/mml-book.pdf"]] },
+        { t: "Random variables & distributions", sec: "MML §6.2–6.3", links: [["Stat 110 — Lectures","https://projects.iq.harvard.edu/stat110/youtube"]] },
+        { t: "Expectation, variance & covariance", sec: "MML §6.4", pdf: [["📄 MML (PDF)","https://mml-book.github.io/book/mml-book.pdf"]] },
+        { t: "Bayes' theorem", sec: "MML §6.3", links: [["3Blue1Brown — Bayes' theorem","https://www.3blue1brown.com/lessons/bayes-theorem"]] },
+        { t: "The Gaussian distribution", sec: "MML §6.5", links: [["3Blue1Brown — Normal distribution","https://www.3blue1brown.com/topics/probability"]] },
+        { t: "Maximum likelihood estimation", sec: "MML §6.6", pdf: [["📄 MML (PDF)","https://mml-book.github.io/book/mml-book.pdf"]] }
+      ] },
+    { id: "math-opt", title: "Optimization",
+      chap: [["MML","Ch. 7"],["d2l.ai","Ch. 12"],["Boyd — Convex Optimization"]],
+      vocab: ["Convexity","Gradient descent","Learning rate","SGD","Momentum","Adam","Lagrange multiplier"],
+      links: [["d2l.ai — Optimization","https://d2l.ai/chapter_optimization/index.html"]],
+      submods: [
+        { t: "Convexity & optimization landscapes", sec: "MML §7.3", links: [["d2l.ai — Convexity","https://d2l.ai/chapter_optimization/convexity.html"]], pdf: [["📄 MML (PDF)","https://mml-book.github.io/book/mml-book.pdf"]] },
+        { t: "Gradient descent", sec: "MML §7.1", links: [["d2l.ai — Gradient descent","https://d2l.ai/chapter_optimization/gd.html"]], colab: "nb_gradient_descent.ipynb" },
+        { t: "Stochastic gradient descent & mini-batches", sec: "MML §7.1.1", links: [["d2l.ai — SGD","https://d2l.ai/chapter_optimization/sgd.html"]], colab: "nb_gradient_descent.ipynb" },
+        { t: "Momentum, RMSProp & Adam", sec: "d2l §12.6–12.10", links: [["d2l.ai — Adam","https://d2l.ai/chapter_optimization/adam.html"]] },
+        { t: "Constrained optimization & Lagrange multipliers", sec: "MML §7.2", links: [["Khan — Lagrange multipliers","https://www.khanacademy.org/math/multivariable-calculus"]], pdf: [["📄 MML (PDF)","https://mml-book.github.io/book/mml-book.pdf"]] }
+      ] }
+  ]
+});
+CURRICULUM.push({
+  id: "ml", name: "Classical Machine Learning", icon: "🤖", color: "#d6457b",
+  source: "Hands-On ML (Géron) · ISLR (free) · Andrew Ng / CS229",
+  units: [
+    { id: "ml-foundations", title: "ML Foundations & Workflow",
+      chap: [["Hands-On ML","Ch. 1–2"],["ISLR","Ch. 2, 5"],["CS229","Notes 1"]],
+      vocab: ["Supervised","Unsupervised","Train/test split","Bias-variance","Cross-validation","Loss function","Overfitting"],
+      links: [["ISLR — free textbook","https://www.statlearning.com/"],["CS229 — Stanford ML","https://cs229.stanford.edu/"]],
+      submods: [
+        { t: "Supervised vs unsupervised learning", sec: "ISLR §2.1", links: [["ISLR — free book","https://www.statlearning.com/"]], pdf: [["📄 ISLR (free book)","https://www.statlearning.com/"]] },
+        { t: "Train / validation / test split", sec: "Hands-On ML Ch. 2", links: [["Hands-On ML notebooks","https://github.com/ageron/handson-ml3"]] },
+        { t: "The bias–variance tradeoff", sec: "ISLR §2.2", links: [["ISLR — free book","https://www.statlearning.com/"]] },
+        { t: "Cross-validation", sec: "ISLR Ch. 5", links: [["scikit-learn — Cross-validation","https://scikit-learn.org/stable/modules/cross_validation.html"]] },
+        { t: "Loss functions & evaluation metrics", sec: "CS229 Notes 1", links: [["scikit-learn — Metrics","https://scikit-learn.org/stable/modules/model_evaluation.html"]] }
+      ] },
+    { id: "ml-regression", title: "Linear & Logistic Regression",
+      chap: [["ISLR","Ch. 3–4"],["Hands-On ML","Ch. 4"],["CS229","Notes 1"]],
+      vocab: ["Linear regression","Least squares","Gradient descent","Logistic regression","Sigmoid","Regularization"],
+      links: [["CS229 — Linear & logistic regression","https://cs229.stanford.edu/"]],
+      submods: [
+        { t: "Linear regression & least squares", sec: "ISLR §3.1", pdf: [["📄 ISLR (free book)","https://www.statlearning.com/"]], colab: "nb_linear_regression.ipynb" },
+        { t: "Gradient descent for regression", sec: "Hands-On ML Ch. 4", links: [["Hands-On ML — Training models","https://github.com/ageron/handson-ml3"]], colab: "nb_linear_regression.ipynb" },
+        { t: "Regularization (ridge & lasso)", sec: "ISLR §6.2", links: [["scikit-learn — Linear models","https://scikit-learn.org/stable/modules/linear_model.html"]] },
+        { t: "Logistic regression & the sigmoid", sec: "ISLR §4.3", links: [["scikit-learn — Logistic regression","https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression"]], colab: "nb_logistic_regression.ipynb" },
+        { t: "Multiclass classification & softmax", sec: "CS229 Notes 1", links: [["CS229 notes","https://cs229.stanford.edu/"]], colab: "nb_logistic_regression.ipynb" }
+      ] },
+    { id: "ml-models", title: "Trees, SVM & k-NN",
+      chap: [["ISLR","Ch. 8–9"],["Hands-On ML","Ch. 5–6"]],
+      vocab: ["k-NN","Decision tree","Entropy","SVM","Kernel","Margin"],
+      links: [["scikit-learn — Supervised learning","https://scikit-learn.org/stable/supervised_learning.html"]],
+      submods: [
+        { t: "k-Nearest Neighbors", sec: "ISLR §2.2.3", links: [["scikit-learn — Nearest neighbors","https://scikit-learn.org/stable/modules/neighbors.html"]], colab: "nb_knn.ipynb" },
+        { t: "Decision trees", sec: "ISLR §8.1", links: [["scikit-learn — Decision trees","https://scikit-learn.org/stable/modules/tree.html"]] },
+        { t: "Support vector machines", sec: "ISLR Ch. 9", links: [["scikit-learn — SVM","https://scikit-learn.org/stable/modules/svm.html"]] },
+        { t: "Kernels & the kernel trick", sec: "Hands-On ML Ch. 5", links: [["CS229 — Kernels","https://cs229.stanford.edu/"]] }
+      ] },
+    { id: "ml-ensembles", title: "Ensemble Learning",
+      chap: [["ISLR","§8.2"],["Hands-On ML","Ch. 7"]],
+      vocab: ["Bagging","Random forest","Boosting","Gradient boosting","XGBoost"],
+      links: [["scikit-learn — Ensembles","https://scikit-learn.org/stable/modules/ensemble.html"]],
+      submods: [
+        { t: "Bagging & the bootstrap", sec: "ISLR §8.2.1", pdf: [["📄 ISLR (free book)","https://www.statlearning.com/"]] },
+        { t: "Random forests", sec: "ISLR §8.2.2", links: [["scikit-learn — Random forests","https://scikit-learn.org/stable/modules/ensemble.html#forest"]] },
+        { t: "Boosting & gradient boosting", sec: "ISLR §8.2.3", links: [["scikit-learn — Gradient boosting","https://scikit-learn.org/stable/modules/ensemble.html#gradient-boosting"]] },
+        { t: "XGBoost / LightGBM in practice", sec: "Hands-On ML Ch. 7", links: [["XGBoost — Docs","https://xgboost.readthedocs.io/en/stable/"]] }
+      ] },
+    { id: "ml-unsup", title: "Unsupervised Learning",
+      chap: [["ISLR","Ch. 12"],["Hands-On ML","Ch. 8–9"]],
+      vocab: ["k-means","Clustering","PCA","Dimensionality reduction","t-SNE"],
+      links: [["scikit-learn — Clustering","https://scikit-learn.org/stable/modules/clustering.html"]],
+      submods: [
+        { t: "k-means clustering", sec: "ISLR §12.4", links: [["scikit-learn — k-means","https://scikit-learn.org/stable/modules/clustering.html#k-means"]], colab: "nb_kmeans.ipynb" },
+        { t: "Hierarchical clustering", sec: "ISLR §12.4.2", links: [["scikit-learn — Hierarchical","https://scikit-learn.org/stable/modules/clustering.html#hierarchical-clustering"]] },
+        { t: "PCA for dimensionality reduction", sec: "ISLR §12.2", links: [["scikit-learn — PCA","https://scikit-learn.org/stable/modules/decomposition.html#pca"]], colab: "nb_pca.ipynb" },
+        { t: "t-SNE & visualization", sec: "Hands-On ML Ch. 8", links: [["scikit-learn — t-SNE","https://scikit-learn.org/stable/modules/manifold.html#t-sne"]] }
+      ] }
+  ]
+});
+CURRICULUM.push({
+  id: "dl", name: "Deep Learning", icon: "🧠", color: "#8b5cf6",
+  source: "Dive into Deep Learning (d2l.ai) · Goodfellow · CS231n · Karpathy Zero-to-Hero",
+  units: [
+    { id: "dl-foundations", title: "Neural Network Foundations",
+      chap: [["d2l.ai","Ch. 5"],["Karpathy","micrograd / makemore"],["CS231n","Notes"]],
+      vocab: ["Perceptron","MLP","Activation","ReLU","Backpropagation","Softmax","Cross-entropy"],
+      links: [["d2l.ai — free textbook","https://d2l.ai/"],["Karpathy — Neural Networks: Zero to Hero","https://karpathy.ai/zero-to-hero.html"]],
+      submods: [
+        { t: "The artificial neuron & perceptron", sec: "d2l §5.1", links: [["d2l.ai — MLPs","https://d2l.ai/chapter_multilayer-perceptrons/index.html"]] },
+        { t: "Multilayer perceptrons & activations", sec: "d2l §5.1", links: [["d2l.ai — MLP","https://d2l.ai/chapter_multilayer-perceptrons/mlp.html"]], colab: "nb_neural_net_from_scratch.ipynb" },
+        { t: "Backpropagation from scratch", sec: "Karpathy — micrograd", links: [["Karpathy — micrograd lecture","https://karpathy.ai/zero-to-hero.html"]], colab: "nb_neural_net_from_scratch.ipynb" },
+        { t: "Softmax & cross-entropy loss", sec: "d2l §4.1", links: [["d2l.ai — Softmax regression","https://d2l.ai/chapter_linear-classification/softmax-regression.html"]] },
+        { t: "Build a neural net from scratch (NumPy)", sec: "CS231n", links: [["CS231n — Neural nets","https://cs231n.github.io/neural-networks-1/"]], colab: "nb_neural_net_from_scratch.ipynb" }
+      ] },
+    { id: "dl-training", title: "Training Deep Networks",
+      chap: [["d2l.ai","Ch. 5–6, 8"],["Goodfellow","Ch. 7–8"],["CS231n"]],
+      vocab: ["Weight init","Batch norm","Dropout","Regularization","Learning rate","Vanishing gradient"],
+      links: [["Goodfellow — Deep Learning (free)","https://www.deeplearningbook.org/"]],
+      submods: [
+        { t: "Weight initialization", sec: "d2l §5.4", links: [["d2l.ai — Numerical stability & init","https://d2l.ai/chapter_multilayer-perceptrons/numerical-stability-and-init.html"]] },
+        { t: "Regularization & dropout", sec: "d2l §5.6", links: [["d2l.ai — Dropout","https://d2l.ai/chapter_multilayer-perceptrons/dropout.html"]] },
+        { t: "Batch normalization", sec: "d2l §8.5", links: [["d2l.ai — Batch norm","https://d2l.ai/chapter_convolutional-modern/batch-norm.html"]] },
+        { t: "Optimizers & learning-rate schedules", sec: "d2l Ch. 12", links: [["d2l.ai — Optimization","https://d2l.ai/chapter_optimization/index.html"]] },
+        { t: "Overfitting, underfitting & generalization", sec: "d2l §5.3", links: [["d2l.ai — Generalization","https://d2l.ai/chapter_multilayer-perceptrons/generalization-deep.html"]] }
+      ] },
+    { id: "dl-pytorch", title: "Frameworks — PyTorch",
+      chap: [["d2l.ai","Ch. 6"],["PyTorch tutorials"]],
+      vocab: ["Tensor","Autograd","nn.Module","Optimizer","DataLoader","GPU"],
+      links: [["PyTorch — Learn the basics","https://pytorch.org/tutorials/beginner/basics/intro.html"]],
+      submods: [
+        { t: "Tensors & operations", sec: "PyTorch — Tensors", links: [["PyTorch — Tensors","https://pytorch.org/tutorials/beginner/basics/tensorqs_tutorial.html"]], colab: "nb_pytorch_mlp.ipynb" },
+        { t: "Autograd & computational graphs", sec: "PyTorch — Autograd", links: [["PyTorch — Autograd","https://pytorch.org/tutorials/beginner/basics/autogradqs_tutorial.html"]] },
+        { t: "nn.Module & building models", sec: "d2l §6.1", links: [["PyTorch — Build the model","https://pytorch.org/tutorials/beginner/basics/buildmodel_tutorial.html"]], colab: "nb_pytorch_mlp.ipynb" },
+        { t: "Training loops, losses & optimizers", sec: "PyTorch — Optimization", links: [["PyTorch — Optimization loop","https://pytorch.org/tutorials/beginner/basics/optimization_tutorial.html"]], colab: "nb_pytorch_mlp.ipynb" },
+        { t: "Datasets & DataLoaders", sec: "PyTorch — Data", links: [["PyTorch — Datasets & DataLoaders","https://pytorch.org/tutorials/beginner/basics/data_tutorial.html"]] }
+      ] },
+    { id: "dl-cv", title: "Convolutional Networks (Computer Vision)",
+      chap: [["d2l.ai","Ch. 7–8, 14"],["CS231n"]],
+      vocab: ["Convolution","Filter","Pooling","CNN","Feature map","Transfer learning"],
+      links: [["CS231n — Convolutional Neural Networks","https://cs231n.github.io/"]],
+      submods: [
+        { t: "Convolutions & pooling", sec: "d2l §7.2–7.5", links: [["d2l.ai — Convolutions","https://d2l.ai/chapter_convolutional-neural-networks/index.html"]], colab: "nb_cnn_pytorch.ipynb" },
+        { t: "Classic CNNs (LeNet, AlexNet, ResNet)", sec: "d2l Ch. 8", links: [["d2l.ai — Modern CNNs","https://d2l.ai/chapter_convolutional-modern/index.html"]] },
+        { t: "Image classification in PyTorch", sec: "CS231n", links: [["CS231n — CNN notes","https://cs231n.github.io/convolutional-networks/"]], colab: "nb_cnn_pytorch.ipynb" },
+        { t: "Transfer learning & fine-tuning", sec: "d2l §14.2", links: [["PyTorch — Transfer learning","https://pytorch.org/tutorials/beginner/transfer_learning_tutorial.html"]] }
+      ] },
+    { id: "dl-seq", title: "Sequence Models & Transformers",
+      chap: [["d2l.ai","Ch. 9–11"],["Karpathy","nanoGPT"],["Vaswani et al. 2017"]],
+      vocab: ["RNN","LSTM","Embedding","Attention","Self-attention","Transformer"],
+      links: [["d2l.ai — Attention & Transformers","https://d2l.ai/chapter_attention-mechanisms-and-transformers/index.html"]],
+      submods: [
+        { t: "RNNs & LSTMs", sec: "d2l Ch. 9–10", links: [["d2l.ai — RNNs","https://d2l.ai/chapter_recurrent-neural-networks/index.html"]] },
+        { t: "Word embeddings", sec: "d2l §15.1", links: [["d2l.ai — Word embeddings","https://d2l.ai/chapter_natural-language-processing-pretraining/index.html"]] },
+        { t: "Attention & self-attention", sec: "d2l §11.1–11.6", links: [["d2l.ai — Attention mechanisms","https://d2l.ai/chapter_attention-mechanisms-and-transformers/attention-scoring-functions.html"]], colab: "nb_transformer_intro.ipynb" },
+        { t: "The Transformer architecture", sec: "d2l §11.7", links: [["d2l.ai — Transformer","https://d2l.ai/chapter_attention-mechanisms-and-transformers/transformer.html"],["Attention Is All You Need","https://arxiv.org/abs/1706.03762"]], colab: "nb_transformer_intro.ipynb" },
+        { t: "Build GPT from scratch (Karpathy)", sec: "Karpathy — nanoGPT", links: [["Karpathy — Let's build GPT","https://karpathy.ai/zero-to-hero.html"]], colab: "nb_transformer_intro.ipynb" }
+      ] }
+  ]
+});
+CURRICULUM.push({
+  id: "aio", name: "AI Olympiad Track (USAAIO / IOAI)", icon: "🏅", color: "#d98a00",
+  source: "USA AI Olympiad (USAAIO) & IOAI official syllabus & materials",
+  units: [
+    { id: "aio-foundations", title: "Olympiad Foundations & Format",
+      chap: [["USAAIO","Syllabus"],["IOAI","Syllabus 2026"]],
+      vocab: ["Colab","Supervised","Unsupervised","Dataset","Evaluation","Baseline"],
+      links: [["USAAIO — Syllabus","https://www.usaaio.org/syllabus"],["IOAI — Official site","https://ioai-official.org/"]],
+      submods: [
+        { t: "USAAIO format & the Colab workflow", sec: "USAAIO — Syllabus", links: [["USAAIO — About","https://www.usaaio.org/about-usaaio"],["USAAIO — Syllabus","https://www.usaaio.org/syllabus"]], colab: "nb_python_basics.ipynb" },
+        { t: "IOAI syllabus & required competencies", sec: "IOAI — Syllabus 2026", links: [["IOAI — Syllabus (PDF)","https://ioai-official.org/wp-content/uploads/2025/10/Syllabus.pdf"],["IOAI — Educational resources","https://ioai-official.org/resources/"]] },
+        { t: "Supervised learning review (regression & classification)", sec: "USAAIO — Supervised", links: [["scikit-learn — Supervised","https://scikit-learn.org/stable/supervised_learning.html"]], colab: "nb_logistic_regression.ipynb" },
+        { t: "Unsupervised learning review (k-means, PCA)", sec: "USAAIO — Unsupervised", links: [["scikit-learn — Clustering","https://scikit-learn.org/stable/modules/clustering.html"]], colab: "nb_kmeans.ipynb" }
+      ] },
+    { id: "aio-modeling", title: "Practical ML Modeling",
+      chap: [["Hands-On ML"],["scikit-learn docs"],["Kaggle Learn"]],
+      vocab: ["Feature engineering","Pipeline","Model selection","Hyperparameter","Validation","Data leakage"],
+      links: [["Kaggle Learn — free courses","https://www.kaggle.com/learn"]],
+      submods: [
+        { t: "Feature engineering & preprocessing", sec: "scikit-learn — Preprocessing", links: [["scikit-learn — Preprocessing","https://scikit-learn.org/stable/modules/preprocessing.html"]] },
+        { t: "sklearn pipelines & composing models", sec: "scikit-learn — Pipelines", links: [["scikit-learn — Pipelines","https://scikit-learn.org/stable/modules/compose.html"]] },
+        { t: "Hyperparameter tuning & validation", sec: "scikit-learn — Model selection", links: [["scikit-learn — Grid search","https://scikit-learn.org/stable/modules/grid_search.html"]] },
+        { t: "Avoiding data leakage & robust evaluation", sec: "Kaggle Learn", links: [["Kaggle — Data leakage","https://www.kaggle.com/code/alexisbcook/data-leakage"]] }
+      ] },
+    { id: "aio-cv", title: "Computer Vision for Olympiad",
+      chap: [["d2l.ai","Ch. 14"],["CS231n"],["IOAI 2025 tasks"]],
+      vocab: ["Image classification","Augmentation","Transfer learning","CNN","Fine-tuning"],
+      links: [["IOAI-2025 — Tasks & datasets","https://github.com/IOAI-official/IOAI-2025"]],
+      submods: [
+        { t: "Image classification pipelines", sec: "d2l Ch. 14", links: [["d2l.ai — Computer vision","https://d2l.ai/chapter_computer-vision/index.html"]], colab: "nb_cnn_pytorch.ipynb" },
+        { t: "Data augmentation", sec: "d2l §14.1", links: [["d2l.ai — Image augmentation","https://d2l.ai/chapter_computer-vision/image-augmentation.html"]] },
+        { t: "Transfer learning with pretrained models", sec: "d2l §14.2", links: [["PyTorch — Transfer learning","https://pytorch.org/tutorials/beginner/transfer_learning_tutorial.html"]] },
+        { t: "Practicing real CV tasks (IOAI 2025)", sec: "IOAI-2025 repo", links: [["IOAI-2025 — GitHub","https://github.com/IOAI-official/IOAI-2025"]] }
+      ] },
+    { id: "aio-nlp", title: "NLP & Transformers for Olympiad",
+      chap: [["d2l.ai","Ch. 11, 15–16"],["Hugging Face course"]],
+      vocab: ["Tokenization","Embedding","Transformer","Fine-tuning","Prompt","Attention"],
+      links: [["Hugging Face — NLP course (free)","https://huggingface.co/learn/nlp-course/chapter1/1"]],
+      submods: [
+        { t: "Text preprocessing & tokenization", sec: "HF course Ch. 2", links: [["HF — Tokenizers","https://huggingface.co/learn/nlp-course/chapter2/4"]] },
+        { t: "Embeddings & pretrained language models", sec: "d2l §15–16", links: [["d2l.ai — NLP pretraining","https://d2l.ai/chapter_natural-language-processing-pretraining/index.html"]], colab: "nb_transformer_intro.ipynb" },
+        { t: "Fine-tuning transformers", sec: "HF course Ch. 3", links: [["HF — Fine-tuning","https://huggingface.co/learn/nlp-course/chapter3/1"]] },
+        { t: "Prompting & practical LLM use", sec: "IOAI resources", links: [["IOAI — Resources","https://ioai-official.org/resources/"]] }
+      ] },
+    { id: "aio-practice", title: "Past Problems & Practice",
+      chap: [["IOAI 2024/2025"],["USAAIO past"],["Kaggle"]],
+      vocab: ["Dataset","Baseline","Leaderboard","Submission","Generalization"],
+      links: [["IOAI-2025 — Tasks","https://github.com/IOAI-official/IOAI-2025"]],
+      submods: [
+        { t: "IOAI 2025 tasks & datasets", sec: "IOAI-2025 repo", links: [["IOAI-2025 — GitHub","https://github.com/IOAI-official/IOAI-2025"]] },
+        { t: "USAAIO practice & syllabus mapping", sec: "USAAIO", links: [["USAAIO — Syllabus","https://www.usaaio.org/syllabus"]] },
+        { t: "Kaggle competitions for practice", sec: "Kaggle", links: [["Kaggle — Competitions","https://www.kaggle.com/competitions"]] },
+        { t: "End-to-end project: train, evaluate, iterate", sec: "Capstone", links: [["Kaggle Learn — Intro to ML","https://www.kaggle.com/learn/intro-to-machine-learning"]], colab: "nb_pytorch_mlp.ipynb" }
+      ] }
+  ]
+});
+// <<DATA>>  (track push() calls are inserted above this marker)
+</script>
+
+<script>
+"use strict";
+/* ============================================================
+   PyAI Tracker — spaced-repetition learning tracker (logic)
+   Reuses the Lumen engine; Tracks → Units → Submodules.
+   ============================================================ */
+const INTERVALS = [1, 3, 7, 16, 35];
+const DAY = 86400000;
+const SOON = 2 * DAY;
+const LS_KEY = "pyai.state.v1";
+const COLAB_BASE = "https://colab.research.google.com/github/wilson-stackabacus/python-ai-tracker/blob/main/";
+let state = loadState();
+
+function loadState() {
+  try { const raw = localStorage.getItem(LS_KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+  return { completed: {}, reviews: {}, vocab: {}, settings: { theme: "light", notifications: false, lastNotified: 0 }, collapsed: {} };
+}
+function saveState() { try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {} }
+
+const UNIT_INDEX = {}, SUBJECT_OF_UNIT = {};
+CURRICULUM.forEach(subj => subj.units.forEach(u => { UNIT_INDEX[u.id] = u; SUBJECT_OF_UNIT[u.id] = subj; }));
+
+function smKey(unitId, idx) { return unitId + "::" + idx; }
+function now() { return Date.now(); }
+function smTitle(unit, i) { const s = unit.submods[i]; return typeof s === "string" ? s : s.t; }
+
+function unitProgress(unit) {
+  const total = unit.submods.length; let done = 0;
+  for (let i = 0; i < total; i++) if (state.completed[smKey(unit.id, i)]) done++;
+  return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
+}
+function subjectProgress(subj) {
+  let done = 0, total = 0;
+  subj.units.forEach(u => { const p = unitProgress(u); done += p.done; total += p.total; });
+  return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
+}
+function overallProgress() {
+  let done = 0, total = 0;
+  CURRICULUM.forEach(s => { const p = subjectProgress(s); done += p.done; total += p.total; });
+  return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
+}
+
+function scheduleReview(key) { state.reviews[key] = { stage: 0, due: now() + INTERVALS[0] * DAY, last: now() }; }
+function scheduleVocab(unitId) { if (!state.vocab[unitId]) state.vocab[unitId] = { stage: 0, due: now() + INTERVALS[0] * DAY, last: now() }; }
+function advance(entry) {
+  const next = entry.stage + 1;
+  if (next >= INTERVALS.length) return { stage: next, due: null, last: now(), mastered: true };
+  return { stage: next, due: now() + INTERVALS[next] * DAY, last: now() };
+}
+function dueReviews() {
+  const out = [];
+  for (const key in state.reviews) {
+    const r = state.reviews[key];
+    if (!state.completed[key] || r.due == null) continue;
+    if (r.due <= now() + SOON) {
+      const [unitId, idxStr] = key.split("::");
+      const unit = UNIT_INDEX[unitId]; if (!unit) continue;
+      out.push({ key, unit, subject: SUBJECT_OF_UNIT[unitId], label: smTitle(unit, +idxStr), entry: r, overdue: r.due <= now() });
+    }
+  }
+  out.sort((a, b) => a.entry.due - b.entry.due); return out;
+}
+function dueVocab() {
+  const out = [];
+  for (const unitId in state.vocab) {
+    const v = state.vocab[unitId]; if (v.due == null) continue;
+    if (v.due <= now() + SOON) {
+      const unit = UNIT_INDEX[unitId]; if (!unit || !unit.vocab || !unit.vocab.length) continue;
+      out.push({ unitId, unit, subject: SUBJECT_OF_UNIT[unitId], entry: v, overdue: v.due <= now() });
+    }
+  }
+  out.sort((a, b) => a.entry.due - b.entry.due); return out;
+}
+function totalDueCount() { return dueReviews().filter(r => r.overdue).length + dueVocab().filter(v => v.overdue).length; }
+
+function toggleSubmodule(unitId, idx) {
+  const key = smKey(unitId, idx);
+  if (state.completed[key]) { delete state.completed[key]; delete state.reviews[key]; }
+  else { state.completed[key] = true; scheduleReview(key); scheduleVocab(unitId); onCompletion(unitId, idx); }
+  saveState();
+}
+function onCompletion(unitId, idx) {
+  const unit = UNIT_INDEX[unitId];
+  toast("success", "Nice — checked off!", "“" + smTitle(unit, idx) + "” scheduled for review in 1 day.");
+  const n = dueReviews().filter(r => r.overdue).length + dueVocab().filter(v => v.overdue).length;
+  if (n > 0) setTimeout(() => { toast("", "🔁 " + n + " review" + (n > 1 ? "s" : "") + " due", "Open the Review Queue to refresh them and keep them in memory."); maybeNotify(); }, 900);
+}
+function markReviewDone(key) {
+  const r = state.reviews[key]; if (!r) return;
+  state.reviews[key] = advance(r); saveState();
+  const r2 = state.reviews[key];
+  if (r2.mastered) toast("success", "Mastered! 🎉", "You've cleared every review interval for this item.");
+  else toast("success", "Reviewed", "Next checkpoint in " + INTERVALS[r2.stage] + " days.");
+  render();
+}
+function markReviewLater(key) { const r = state.reviews[key]; if (!r) return; r.due = now() + DAY; saveState(); render(); }
+function markVocabDone(unitId) {
+  const v = state.vocab[unitId]; if (!v) return;
+  state.vocab[unitId] = advance(v); saveState();
+  const v2 = state.vocab[unitId];
+  if (v2.mastered) toast("success", "Vocabulary mastered ✨", "All review intervals cleared for these terms.");
+  else toast("success", "Vocab refreshed", "These terms resurface in " + INTERVALS[v2.stage] + " days.");
+  render();
+}
+
+function maybeNotify() {
+  if (!state.settings.notifications) return;
+  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+  if (now() - (state.settings.lastNotified || 0) < 3600000) return;
+  const count = totalDueCount(); if (count <= 0) return;
+  try { new Notification("PyAI Tracker — time to review", { body: count + " item" + (count > 1 ? "s are" : " is") + " due. Open the tracker to refresh them.", tag: "pyai-review" }); state.settings.lastNotified = now(); saveState(); } catch (e) {}
+}
+async function toggleNotifications() {
+  if (typeof Notification === "undefined") { toast("", "Not supported", "This browser doesn't support notifications."); return; }
+  if (state.settings.notifications) { state.settings.notifications = false; saveState(); renderNotifBtn(); toast("", "Reminders off", "Browser pop-up reminders disabled. Your Review Queue still works."); return; }
+  let perm = Notification.permission;
+  if (perm !== "granted") perm = await Notification.requestPermission();
+  if (perm === "granted") { state.settings.notifications = true; saveState(); renderNotifBtn(); toast("success", "Reminders on", "While this tab is open, you'll get a pop-up when reviews are due."); maybeNotify(); }
+  else toast("", "Permission denied", "Allow notifications in your browser settings to enable reminders.");
+}
+
+function applyTheme() { document.documentElement.setAttribute("data-theme", state.settings.theme); document.getElementById("themeBtn").textContent = state.settings.theme === "dark" ? "☀️" : "🌙"; }
+function toggleTheme() { state.settings.theme = state.settings.theme === "dark" ? "light" : "dark"; saveState(); applyTheme(); }
+
+function toast(kind, title, body) {
+  const t = document.createElement("div");
+  t.className = "toast" + (kind ? " " + kind : "");
+  t.innerHTML = '<div class="t-title"></div><div class="t-body"></div>';
+  t.querySelector(".t-title").textContent = title; t.querySelector(".t-body").textContent = body;
+  document.getElementById("toaster").appendChild(t);
+  setTimeout(() => { t.style.transition = "opacity .4s, transform .4s"; t.style.opacity = "0"; t.style.transform = "translateX(40px)"; setTimeout(() => t.remove(), 400); }, 4200);
+}
+
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function progBar(pct, color) { return '<div class="bar"><span style="width:' + pct + '%;background:' + (color || "var(--accent)") + '"></span></div>'; }
+function relDue(ts) {
+  if (ts == null) return "mastered";
+  const diff = ts - now();
+  if (diff <= 0) { const d = Math.ceil(-diff / DAY); return d <= 0 ? "due now" : "overdue " + d + "d"; }
+  const d = Math.ceil(diff / DAY); return d <= 1 ? "due ≤ 1d" : "in " + d + "d";
+}
+function hostOf(url) { try { return new URL(url).hostname.replace(/^www\./, ""); } catch (e) { return ""; } }
+
+let activeTab = "dashboard";
+function setTab(tab) { activeTab = tab; document.querySelectorAll("nav.tabs button").forEach(b => b.classList.toggle("active", b.dataset.tab === tab)); render(); }
+function render() {
+  renderBadges(); renderNotifBtn();
+  const main = document.getElementById("main");
+  if (activeTab === "dashboard") main.innerHTML = viewDashboard();
+  else if (activeTab === "subjects") main.innerHTML = viewSubjects();
+  else if (activeTab === "review") main.innerHTML = viewReview();
+  else if (activeTab === "about") main.innerHTML = viewAbout();
+  wire();
+}
+function renderBadges() { const c = totalDueCount(), badge = document.getElementById("reviewBadge"); if (c > 0) { badge.style.display = ""; badge.textContent = c; } else badge.style.display = "none"; }
+function renderNotifBtn() { const btn = document.getElementById("notifBtn"), on = state.settings.notifications; btn.classList.toggle("on", on); document.getElementById("notifLabel").textContent = on ? "Reminders on" : "Reminders"; document.getElementById("notifIcon").textContent = on ? "🔔" : "🔕"; }
+
+function viewDashboard() {
+  const o = overallProgress(), dr = dueReviews(), dv = dueVocab();
+  const dueNow = dr.filter(r => r.overdue).length + dv.filter(v => v.overdue).length;
+  let unitsStarted = 0, unitsTotal = 0;
+  CURRICULUM.forEach(s => s.units.forEach(u => { unitsTotal++; if (unitProgress(u).done > 0) unitsStarted++; }));
+  let html = '<div class="view"><h1 class="page">Your learning dashboard</h1>';
+  html += '<p class="page-sub">From <code>print("hello")</code> to AI-Olympiad models. Check things off as you learn — spaced reviews keep them in memory.</p>';
+  html += '<div class="stat-grid">';
+  html += stat(o.pct + "%", "Overall complete", "accent");
+  html += stat(o.done + "/" + o.total, "Submodules done", "");
+  html += stat(unitsStarted + "/" + unitsTotal, "Units in progress", "green");
+  html += stat(dueNow, "Reviews due now", dueNow > 0 ? "amber" : "");
+  html += '</div><div class="section-title">Tracks</div><div class="subj-grid">';
+  CURRICULUM.forEach(s => {
+    const p = subjectProgress(s);
+    html += '<div class="card subj-card" data-goto-subject="' + s.id + '"><div class="top"><span class="subj-dot" style="background:' + s.color + '"></span><h3>' + s.icon + " " + esc(s.name) + '</h3></div>';
+    html += '<div class="src">' + esc(s.source) + '</div>';
+    html += '<div class="meta"><span>' + s.units.length + ' units · <b>' + p.done + '</b>/' + p.total + ' submodules</span><b>' + p.pct + '%</b></div>' + progBar(p.pct, s.color) + '</div>';
+  });
+  html += '</div><div class="section-title">Up next for review</div>';
+  if (dr.length === 0 && dv.length === 0) html += '<div class="card empty"><div class="big">🌱</div><p><b>Nothing scheduled yet.</b></p><p>Complete a submodule in <b>Tracks</b> and it’ll appear here on a spaced schedule.</p></div>';
+  else {
+    html += '<div class="review-col">';
+    dr.slice(0, 4).forEach(r => html += reviewItemHTML(r));
+    if (dv.length) html += vocabPreviewHTML(dv[0]);
+    html += '</div>';
+    if (dr.length + dv.length > 5) html += '<p class="page-sub" style="margin-top:14px">…and more in the <a href="#" data-goto-tab="review">Review Queue</a>.</p>';
+  }
+  return html + '</div>';
+}
+function stat(num, lbl, cls) { return '<div class="card stat"><div class="num ' + (cls || "") + '">' + num + '</div><div class="lbl">' + lbl + '</div></div>'; }
+
+function viewSubjects() {
+  let html = '<div class="view"><h1 class="page">Tracks & units</h1>';
+  html += '<p class="page-sub">Seven tracks from Python foundations to AI-Olympiad level. Each submodule maps to a real book/section and carries free resources; many include a runnable <span style="color:var(--colab);font-weight:700">▶ Colab</span> notebook.</p>';
+  CURRICULUM.forEach(s => {
+    const p = subjectProgress(s);
+    const collapsed = state.collapsed["subj:" + s.id] ? " collapsed" : "";
+    html += '<div class="card subject-block' + collapsed + '" data-subject="' + s.id + '"><div class="subject-head" data-toggle-subject="' + s.id + '">';
+    html += '<span class="subj-dot" style="background:' + s.color + '"></span><div><h2>' + s.icon + " " + esc(s.name) + '</h2><div class="src">' + esc(s.source) + '</div></div>';
+    html += '<div class="minibar" style="margin-left:auto">' + progBar(p.pct, s.color) + '</div><span class="pct">' + p.pct + '%</span><span class="chev">▼</span></div><div class="units">';
+    s.units.forEach(u => html += unitHTML(s, u));
+    html += '</div></div>';
+  });
+  return html + '</div>';
+}
+function smResourcesHTML(o) {
+  const pdf = o.pdf || [], links = o.links || [];
+  if (!pdf.length && !links.length && !o.colab) return "";
+  let h = '<div class="sm-links">';
+  if (o.colab) h += '<a class="sm-colab" href="' + COLAB_BASE + esc(o.colab) + '" target="_blank" rel="noopener noreferrer">▶ Open in Colab <span class="ext">colab</span></a>';
+  pdf.forEach(l => h += '<a class="sm-pdf" href="' + esc(l[1]) + '" target="_blank" rel="noopener noreferrer">' + esc(l[0]) + ' <span class="ext">' + esc(hostOf(l[1])) + '</span></a>');
+  links.forEach(l => h += '<a href="' + esc(l[1]) + '" target="_blank" rel="noopener noreferrer">↗ ' + esc(l[0]) + ' <span class="ext">' + esc(hostOf(l[1])) + '</span></a>');
+  return h + '</div>';
+}
+function unitHTML(subj, unit) {
+  const p = unitProgress(unit);
+  const open = state.collapsed["unit:" + unit.id] === false ? " open" : (state.openUnit === unit.id ? " open" : "");
+  let html = '<div class="unit' + open + '" data-unit="' + unit.id + '"><div class="unit-head" data-toggle-unit="' + unit.id + '"><span class="chev">▶</span>';
+  html += '<div><div class="u-title">' + esc(unit.title) + '</div><div class="u-chap">' + unit.chap.map(c => esc(c[0]) + " " + esc(c[1])).join(" · ") + '</div></div>';
+  html += '<div class="u-prog"><span class="minibar">' + progBar(p.pct, subj.color) + '</span><span class="u-count">' + p.done + '/' + p.total + '</span></div></div><div class="unit-body">';
+  unit.submods.forEach((sm, i) => {
+    const o = typeof sm === "string" ? { t: sm } : sm;
+    const key = smKey(unit.id, i), checked = state.completed[key] ? "checked" : "";
+    html += '<div class="submod"><div class="submod-row"><label><input type="checkbox" ' + checked + ' data-toggle-sm="' + unit.id + '|' + i + '"><span class="checkbox">✓</span><span class="sm-text">' + esc(o.t) + '</span></label>';
+    if (o.sec) html += '<span class="sec-tag">' + esc(o.sec) + '</span>';
+    html += '</div>' + smResourcesHTML(o) + '</div>';
+  });
+  html += '<div class="unit-meta"><div class="meta-box"><h4>📚 Reference books / courses</h4><div class="book-list">';
+  unit.chap.forEach(c => html += '<span class="book-chip"><b>' + esc(c[0]) + '</b> <span>' + esc(c[1]) + '</span></span>');
+  html += '</div></div><div class="meta-box"><h4>🔑 Key vocabulary (resurfaced on a schedule)</h4><div class="vocab-list">';
+  unit.vocab.forEach(v => html += '<span class="vocab-pill">' + esc(v) + '</span>');
+  html += '</div></div>';
+  if (unit.links && unit.links.length) {
+    html += '<div class="meta-box"><h4>🔗 Unit overview & broader resources</h4><div class="link-list">';
+    unit.links.forEach(l => html += '<a href="' + esc(l[1]) + '" target="_blank" rel="noopener noreferrer">↗ ' + esc(l[0]) + ' <span class="ext">' + esc(hostOf(l[1])) + '</span></a>');
+    html += '</div></div>';
+  }
+  return html + '</div></div>';
+}
+
+function viewReview() {
+  const dr = dueReviews(), dv = dueVocab();
+  let html = '<div class="view"><h1 class="page">Review queue</h1>';
+  html += '<p class="page-sub">Spaced repetition at ' + INTERVALS.join(", ") + '-day intervals. Refresh each item to lock it in and reschedule the next checkpoint.</p>';
+  html += '<div class="section-title">Concepts to review' + (dr.length ? " (" + dr.length + ")" : "") + '</div>';
+  if (dr.length === 0) html += '<div class="card empty"><div class="big">✅</div><p><b>No concept reviews due.</b></p><p>You’re all caught up. New reviews appear as your scheduled checkpoints arrive.</p></div>';
+  else { html += '<div class="review-col">'; dr.forEach(r => html += reviewItemHTML(r, true)); html += '</div>'; }
+  html += '<div class="section-title">Vocabulary to refresh' + (dv.length ? " (" + dv.length + ")" : "") + '</div>';
+  if (dv.length === 0) html += '<div class="card empty"><div class="big">🔤</div><p><b>No vocabulary due.</b></p><p>Key terms from your started units resurface here on a spaced schedule.</p></div>';
+  else { html += '<div class="review-col">'; dv.forEach(v => html += vocabReviewHTML(v)); html += '</div>'; }
+  return html + '</div>';
+}
+function reviewItemHTML(r, withActions) {
+  const cls = r.overdue ? "due-now" : "due-soon";
+  let html = '<div class="card review-item"><div class="ri-icon" style="background:' + r.subject.color + '22;color:' + r.subject.color + '">' + r.subject.icon + '</div>';
+  html += '<div class="ri-main"><div class="ri-title">' + esc(r.label) + '</div><div class="ri-sub">' + esc(r.subject.name) + ' · ' + esc(r.unit.title) + ' · stage ' + (r.entry.stage + 1) + '/' + INTERVALS.length + '</div></div>';
+  html += '<span class="ri-due ' + cls + '">' + relDue(r.entry.due) + '</span>';
+  if (withActions) html += '<button class="btn primary" data-review-done="' + esc(r.key) + '">Reviewed ✓</button><button class="btn" data-review-later="' + esc(r.key) + '">Later</button>';
+  return html + '</div>';
+}
+function vocabPreviewHTML(v) {
+  return '<div class="card review-item"><div class="ri-icon" style="background:' + v.subject.color + '22;color:' + v.subject.color + '">🔤</div><div class="ri-main"><div class="ri-title">Vocabulary: ' + esc(v.unit.title) + '</div><div class="ri-sub">' + esc(v.subject.name) + ' · ' + v.unit.vocab.length + ' terms</div></div><span class="ri-due ' + (v.overdue ? "due-now" : "due-soon") + '">' + relDue(v.entry.due) + '</span></div>';
+}
+function vocabReviewHTML(v) {
+  let html = '<div class="card vocab-review-card"><div class="vr-head"><div class="ri-icon" style="background:' + v.subject.color + '22;color:' + v.subject.color + '">🔤</div>';
+  html += '<div class="ri-main"><div class="ri-title">' + esc(v.unit.title) + ' — key terms</div><div class="ri-sub">' + esc(v.subject.name) + ' · stage ' + (v.entry.stage + 1) + '/' + INTERVALS.length + '</div></div>';
+  html += '<span class="ri-due ' + (v.overdue ? "due-now" : "due-soon") + '">' + relDue(v.entry.due) + '</span></div><div class="terms">';
+  v.unit.vocab.forEach(t => html += '<span class="vocab-pill">' + esc(t) + '</span>');
+  html += '</div><div style="display:flex;gap:8px"><button class="btn primary" data-vocab-done="' + v.unitId + '">I remember these ✓</button><a class="btn" href="#" data-vocab-study="' + v.unitId + '">Study in unit ↗</a></div></div>';
+  return html;
+}
+
+function viewAbout() {
+  let html = '<div class="view prose"><h1 class="page">How PyAI Tracker works</h1>';
+  html += '<p class="page-sub">A clean, offline-first roadmap from Python fundamentals to USA AI Olympiad (USAAIO) / IOAI level, with a heavy linear-algebra core and runnable Colab notebooks.</p>';
+  html += '<h2>1 · Track what you learn</h2><p>Everything is organized <b>Tracks → Units → Submodules</b>. Each submodule is a checkbox mapped to a real <b>book/section</b> (e.g. <i>d2l.ai §3.1</i>, <i>MML §2.3</i>, <i>MIT 18.06</i>) with curated <b>free</b> resource links. Progress bars roll up per unit and per track.</p>';
+  html += '<h2>2 · Runnable Colab notebooks</h2><p>Hands-on submodules carry a <span style="color:var(--colab);font-weight:700">▶ Open in Colab</span> button that launches a real Jupyter notebook (NumPy / matplotlib / scikit-learn / PyTorch) straight from the repo — gradient descent, linear regression, a neural net from scratch, a PyTorch MLP, and more.</p>';
+  html += '<h2>3 · Spaced repetition</h2><p>Checking something off schedules review checkpoints at expanding intervals:</p>';
+  html += '<div class="interval-pills">' + INTERVALS.map(d => '<div class="ip">' + d + '<small>day' + (d > 1 ? "s" : "") + '</small></div>').join("") + '</div>';
+  html += '<p>Due items surface in the <b>Review Queue</b>; <b>Reviewed ✓</b> advances to the next interval. Clear all five to <b>master</b> an item. Each unit’s key <b>vocabulary</b> resurfaces on the same schedule.</p>';
+  html += '<h2>4 · Reminders, themes, privacy</h2><p>Optional browser notifications (capped hourly), light/dark themes, and everything stored in your browser’s <b>localStorage</b> — no account, no server. The only network requests are a web font, the free resource links, and Colab.</p>';
+  html += '<p style="margin-top:18px"><button class="danger-link" id="resetBtn">Reset all progress</button></p></div>';
+  return html;
+}
+
+function wire() {
+  document.querySelectorAll("[data-toggle-sm]").forEach(el => el.addEventListener("change", () => { const [uid, idx] = el.dataset.toggleSm.split("|"); toggleSubmodule(uid, +idx); render(); }));
+  document.querySelectorAll("[data-toggle-unit]").forEach(el => el.addEventListener("click", e => {
+    if (e.target.closest("a")) return;
+    const id = el.dataset.toggleUnit, unitEl = el.closest(".unit"), willOpen = !unitEl.classList.contains("open");
+    state.collapsed["unit:" + id] = willOpen ? false : true; if (state.openUnit === id && !willOpen) state.openUnit = null; unitEl.classList.toggle("open");
+  }));
+  document.querySelectorAll("[data-toggle-subject]").forEach(el => el.addEventListener("click", () => { const id = el.dataset.toggleSubject, block = el.closest(".subject-block"); block.classList.toggle("collapsed"); state.collapsed["subj:" + id] = block.classList.contains("collapsed"); saveState(); }));
+  document.querySelectorAll("[data-goto-subject]").forEach(el => el.addEventListener("click", () => { state.openSubject = el.dataset.gotoSubject; setTab("subjects"); setTimeout(() => scrollToSubject(el.dataset.gotoSubject), 60); }));
+  document.querySelectorAll("[data-goto-tab]").forEach(el => el.addEventListener("click", e => { e.preventDefault(); setTab(el.dataset.gotoTab); }));
+  document.querySelectorAll("[data-review-done]").forEach(el => el.addEventListener("click", () => markReviewDone(el.dataset.reviewDone)));
+  document.querySelectorAll("[data-review-later]").forEach(el => el.addEventListener("click", () => markReviewLater(el.dataset.reviewLater)));
+  document.querySelectorAll("[data-vocab-done]").forEach(el => el.addEventListener("click", () => markVocabDone(el.dataset.vocabDone)));
+  document.querySelectorAll("[data-vocab-study]").forEach(el => el.addEventListener("click", e => {
+    e.preventDefault(); const uid = el.dataset.vocabStudy;
+    state.openUnit = uid; state.collapsed["unit:" + uid] = false; state.collapsed["subj:" + SUBJECT_OF_UNIT[uid].id] = false;
+    setTab("subjects"); setTimeout(() => { const u = document.querySelector('[data-unit="' + uid + '"]'); if (u) u.scrollIntoView({ behavior: "smooth", block: "center" }); }, 80);
+  }));
+  const reset = document.getElementById("resetBtn");
+  if (reset) reset.addEventListener("click", () => { if (confirm("Reset ALL progress, reviews, and vocabulary schedules? This cannot be undone.")) { state = { completed: {}, reviews: {}, vocab: {}, settings: state.settings, collapsed: {} }; saveState(); toast("", "Progress reset", "Everything has been cleared."); render(); } });
+}
+function scrollToSubject(id) { state.collapsed["subj:" + id] = false; saveState(); const el = document.querySelector('[data-subject="' + id + '"]'); if (el) { el.classList.remove("collapsed"); el.scrollIntoView({ behavior: "smooth", block: "start" }); } }
+
+applyTheme();
+document.getElementById("themeBtn").addEventListener("click", toggleTheme);
+document.getElementById("notifBtn").addEventListener("click", toggleNotifications);
+document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+render();
+setInterval(() => { renderBadges(); maybeNotify(); if (activeTab === "review" || activeTab === "dashboard") render(); }, 60000);
+</script>
+</body>
+</html>
